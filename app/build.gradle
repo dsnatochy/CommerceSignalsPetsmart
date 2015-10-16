@@ -1,0 +1,41 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 21
+    buildToolsVersion "21.1.1"
+
+    defaultConfig {
+        applicationId "co.poynt.samples"
+        minSdkVersion 19
+        targetSdkVersion 19
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:21.0.3'
+
+    // Poynt Dependencies
+    compile 'co.poynt.api:android-api-model:1.2.28@jar'
+    compile 'co.poynt.android.sdk:poynt-sdk:1.2.8-SNAPSHOT@aar'
+
+    // JWT dependencies - if you want to parse JWTs
+    compile 'net.jcip:jcip-annotations:1.0@jar'
+    compile 'com.nimbusds:nimbus-jose-jwt:2.26@jar'
+    compile 'net.minidev:json-smart:1.2@jar'
+
+    // Jackson
+    compile 'com.fasterxml.jackson.core:jackson-core:2.1.4'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.1.4'
+
+    // for bar code
+    compile 'com.google.zxing:core:3.1.0'
+}
