@@ -70,8 +70,9 @@
                                 <action android:name="poynt.intent.action.COLLECT_MULTI_TENDER_PAYMENT" />
                                 <action android:name="poynt.intent.action.COLLECT_PAYMENT" />
                                 <action android:name="poynt.intent.action.COLLECT_PAYMENT_RESULT" />
-                -->
+
                 <action android:name="poynt.intent.action.CUSTOMER_DETECTED" />
+           -->
                 <action android:name="poynt.intent.action.NEW_ORDER_CREATED" />
 
                 <!--
