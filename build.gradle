@@ -19,15 +19,15 @@ allprojects {
         maven {
             url 'https://nexus.poynt.co/content/repositories/snapshots'
             credentials {
-                username 'external'
-                password 'poynt'
+                username mavenExternalUser
+                password mavenExternalPassword
             }
         }
         maven {
             url 'https://nexus.poynt.co/content/repositories/releases'
             credentials {
-                username 'external'
-                password 'poynt'
+                username mavenExternalUser
+                password mavenExternalPassword
             }
         }
         mavenCentral()
