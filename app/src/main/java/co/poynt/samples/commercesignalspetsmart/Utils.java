@@ -8,11 +8,21 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.common.BitMatrix;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 /**
  * Created by dennis on 10/7/15.
  */
 public class Utils {
     private final static String TAG = "co.poynt.samples.Utils";
+
+    // convert amount from long to float with 2 decimals
+    public static double dollarAmount (Long amt){
+        BigDecimal bd = new BigDecimal(amt);
+        bd = bd.divide(new BigDecimal(100), 2, RoundingMode.HALF_UP);
+        return bd.doubleValue();
+    }
     public static Bitmap generateBarcode(String contents) {
 
         int WHITE = 0xFFFFFFFF;
@@ -21,7 +31,7 @@ public class Utils {
         MultiFormatWriter writer = new MultiFormatWriter();
         BitMatrix result;
         try {
-            int qrSize = 400;
+            int qrSize = 300;
             result = writer.encode(contents, BarcodeFormat.QR_CODE, qrSize, qrSize, null);
         } catch (Exception e) {
             Log.e(TAG, "Failed to generate barcode: " + e.getMessage());

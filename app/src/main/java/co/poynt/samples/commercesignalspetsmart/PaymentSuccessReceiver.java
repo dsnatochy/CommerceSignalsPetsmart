@@ -23,6 +23,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 
+import java.util.UUID;
+
 public class PaymentSuccessReceiver extends BroadcastReceiver {
 
     private static final String TAG = "PaymentSuccessReceiver";
@@ -48,21 +50,21 @@ public class PaymentSuccessReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
 
-
-
-        // TODO: This method is called when the BroadcastReceiver is receiving
-        // an Intent broadcast.
-        //throw new UnsupportedOperationException("Not yet implemented");
         Log.d(TAG, "Intent: " + intent);
-        //Bundle extras = intent.getExtras();
-        Bundle bundle = intent.getExtras();
+        Bundle extras = intent.getExtras();
+        UUID objUUID = (UUID)extras.get(Intents.INTENT_EXTRAS_ORDER_ID);
+
+        String orderId = objUUID.toString();
+
         // -1 is returned if customerid is not there
 //        long customerId = intent.getLongExtra(Intents.INTENT_EXTRAS_CUSTOMERID,-1);
 //         Log.d(TAG, "customer id: " + customerId);
 
         // if OrderService is not running - start it.
+        Intent orderServiceIntent = new Intent(context, OrderService.class);
+        orderServiceIntent.putExtra(Intents.INTENT_EXTRAS_ORDER_ID, orderId);
 
-        context.startService(new Intent(context, OrderService.class));
+        context.startService(orderServiceIntent);
 
 
 

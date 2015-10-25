@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">Petsmart Demo</string>
+    <string name="app_name">Commerce Signals</string>
     <string name="title_activity_main">MainActivity</string>
 
-    <string name="hello_world">Hello world!</string>
+    <string name="hello_world">COMING SOON!</string>
     <string name="action_settings">Settings</string>
 </resources>
