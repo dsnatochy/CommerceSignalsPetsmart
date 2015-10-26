@@ -1,5 +1,6 @@
 package co.poynt.samples.commercesignalspetsmart;
 
+import android.accounts.Account;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -62,6 +63,7 @@ import co.poynt.api.model.OrderItem;
 import co.poynt.os.contentproviders.orders.orders.OrdersColumns;
 import co.poynt.os.contentproviders.orders.orders.OrdersCursor;
 import co.poynt.os.model.Intents;
+import co.poynt.os.model.PaymentSettings;
 import co.poynt.os.model.PoyntError;
 import co.poynt.os.model.PrintedReceipt;
 import co.poynt.os.model.PrintedReceiptLine;
@@ -139,66 +141,15 @@ public class OrderService extends Service {
         public void orderResponse(Order order, String s, PoyntError poyntError) throws RemoteException {
 //            Log.d(TAG, "Order Info: " + order.toString());
 
-            if (mBusiness != null) {
-                String bizName = mBusiness.getDoingBusinessAs();
-                Address address = mBusiness.getAddress();
-                String addr1 = address.getLine1();
-                String city = address.getCity();
-                String state = address.getTerritory();
-                String zip = address.getPostalCode();
-                String phone = "(" + mBusiness.getPhone().getAreaCode() + ")" + mBusiness.getPhone().getLocalPhoneNumber();
+            if (order == null) {
+                return;
+            } else {
+                getStaticReceipt(order);
 
-                Log.d(TAG, bizName);
-                Log.d(TAG, addr1);
-                Log.d(TAG, city + " " + state + ", " + zip);
-                Log.d(TAG, phone);
+                return;
             }
-
-            Calendar time = order.getCreatedAt();
-            Date date = time.getTime();
-            SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy h:mm a");
-            String orderDate = dateFormat.format(date);
-            String orderId = order.getId().toString().substring(0, 8);
-            String orderNumber = order.getOrderNumber();
-            List<OrderItem> items = order.getItems();
-
-            Log.d(TAG, "Time: " + orderDate);
-            Log.d(TAG, "Order ID: #" + orderId);
-            Log.d(TAG, "Order Number: #" + orderNumber);
-            Log.d(TAG, "-----------------------");
-
-            for (OrderItem orderItem : items) {
-                String itemName = orderItem.getName();
-                float quantity = orderItem.getQuantity();
-
-                BigDecimal bd = new BigDecimal(orderItem.getUnitPrice());
-                bd = bd.divide(new BigDecimal(100), 2, RoundingMode.HALF_UP);
-                double unitPrice = bd.doubleValue();
-                String quantityString = "";
-                if (quantity > 1.0f) {
-                    quantityString = "" + quantity + "@";
-                }
-                Log.d(TAG, itemName + "      " + quantityString + " " + unitPrice);
-            }
-            Log.d(TAG, "----------------------");
-
-            OrderAmounts orderAmounts = order.getAmounts();
-            double subtotal = Utils.dollarAmount(orderAmounts.getSubTotal());
-            double total = Utils.dollarAmount(orderAmounts.getNetTotal());
-
-            Log.d(TAG, "Total              " + subtotal);
-            Log.d(TAG, "----------------------");
-            Log.d(TAG, "Grand Total        " + total);
-
-            Bitmap receiptImage = createOrderImage(order);
-//            printPosImage(Bitmap image);
-
         }
     };
-
-    private Bitmap createOrderImage(Order order){
-
-    }
 
     /****
      * receipt printing service setup
@@ -303,7 +254,6 @@ public class OrderService extends Service {
         }
 
 
-
         public mPOPPrintingTask(String orderId) {
             this.orderId = orderId;
         }
@@ -312,7 +262,7 @@ public class OrderService extends Service {
 
     private void printPosImage(Bitmap image) {
 
-        byte[] data = getPOSImage(200, image,SCBBitmapConverter.Rotation.Normal);
+        byte[] data = getPOSImage(400, image, SCBBitmapConverter.Rotation.Normal);
         Comunication.Result result;
 
         result = Comunication.sendCommands(data,
@@ -321,7 +271,7 @@ public class OrderService extends Service {
 
     }
 
-    final byte[] getPOSImage(int width, Bitmap bitmap,SCBBitmapConverter.Rotation rotation) {
+    final byte[] getPOSImage(int width, Bitmap bitmap, SCBBitmapConverter.Rotation rotation) {
         CommandDataList commands = new CommandDataList();
 
         ISCBBuilder builder = SCBFactory.createBuilder(SCBFactory.Emulation.Star);
@@ -338,60 +288,64 @@ public class OrderService extends Service {
 
         return commands.getByteArray();
     }
-    private PrintedReceipt getStaticReceipt() {
-        PrintedReceipt printedReceipt = new PrintedReceipt();
-        List<PrintedReceiptLine> header = new ArrayList<PrintedReceiptLine>();
-        PrintedReceiptLine headerLine1 = new PrintedReceiptLine();
-        headerLine1.setText("Lucky Dog Bar and Grill");
-        PrintedReceiptLine headerLine2 = new PrintedReceiptLine();
-        headerLine2.setText("$2 OFF AN ENTREE");
-        PrintedReceiptLine headerLine3 = new PrintedReceiptLine();
-        headerLine3.setText("Coupon code: 2OFF");
-        PrintedReceiptLine headerLine4 = new PrintedReceiptLine();
-        headerLine4.setText("");
-        PrintedReceiptLine headerLine5 = new PrintedReceiptLine();
-        headerLine5.setText("For demo purposes only,");
-        PrintedReceiptLine headerLine6 = new PrintedReceiptLine();
-        headerLine6.setText("not a redeemable offer");
 
-        header.add(headerLine1);
-        header.add(headerLine2);
-        header.add(headerLine3);
-        header.add(headerLine4);
-        header.add(headerLine5);
-        header.add(headerLine6);
+    private void getStaticReceipt(Order order) {
 
+        PoyntReceiptBuilder builder = new PoyntReceiptBuilder(new PaymentSettings());
 
-        printedReceipt.setBody(header);
-        printedReceipt.setHeaderImage(Utils.generateBarcode("2OFF"));
+        if (mBusiness != null) {
+            String bizName = mBusiness.getDoingBusinessAs();
+            Address address = mBusiness.getAddress();
+            String addr1 = address.getLine1();
+            String city = address.getCity();
+            String state = address.getTerritory();
+            String zip = address.getPostalCode();
+            String phone = "(" + mBusiness.getPhone().getAreaCode() + ")" + mBusiness.getPhone().getLocalPhoneNumber();
 
-        List<PrintedReceiptLine> footerLines = new ArrayList<PrintedReceiptLine>();
-        PrintedReceiptLine footerLine1 = new PrintedReceiptLine();
-        PrintedReceiptLine footerLine2 = new PrintedReceiptLine();
-        PrintedReceiptLine footerLine3 = new PrintedReceiptLine();
-        PrintedReceiptLine footerLine4 = new PrintedReceiptLine();
-        PrintedReceiptLine footerLine5 = new PrintedReceiptLine();
-        footerLine1.setText("");
-        footerLine2.setText("");
-        footerLine3.setText("");
-        footerLine4.setText("");
-        footerLine5.setText("");
+            Log.d(TAG, bizName);
+            Log.d(TAG, addr1);
+            Log.d(TAG, city + " " + state + ", " + zip);
+            Log.d(TAG, phone);
 
-        footerLines.add(footerLine1);
-        footerLines.add(footerLine2);
-        footerLines.add(footerLine3);
-        footerLines.add(footerLine4);
-        footerLines.add(footerLine5);
+            builder.setBusinessName(bizName);
+            builder.setPhone(mBusiness.getPhone());
+            builder.setStoreAddress(address);
 
-        printedReceipt.setFooter(footerLines);
+            PrintedReceipt receipt = builder.build(false, order);
+            List<PrintedReceiptLine> bodyList = receipt.getBody();
 
-//        List<PrintedReceiptLine> body = new ArrayList<PrintedReceiptLine>();
-//        PrintedReceiptLine bodyLine1 = new PrintedReceiptLine();
-//        bodyLine1.setText("Coupon code: 2OFF");
-//        body.add(bodyLine1);
-//        printedReceipt.setBody(body);
+            PrintedReceiptLine emptyLine = new PrintedReceiptLine();
+            PrintedReceiptLine headerLine1 = new PrintedReceiptLine();
+            headerLine1.setText("Lucky Dog Bar and Grill");
+            PrintedReceiptLine headerLine2 = new PrintedReceiptLine();
+            headerLine2.setText("$2 OFF AN ENTREE");
+            PrintedReceiptLine headerLine3 = new PrintedReceiptLine();
+            headerLine3.setText("Coupon code: 2OFF");
+            emptyLine.setText(" ");
+            PrintedReceiptLine headerLine5 = new PrintedReceiptLine();
+            headerLine5.setText("For demo purposes only,");
+            PrintedReceiptLine headerLine6 = new PrintedReceiptLine();
+            headerLine6.setText("not a redeemable offer");
 
-        return printedReceipt;
+            bodyList.add(emptyLine);
+            bodyList.add(emptyLine);
+            bodyList.add(emptyLine);
+            bodyList.add(emptyLine);
+            bodyList.add(headerLine1);
+            bodyList.add(headerLine2);
+            bodyList.add(headerLine3);
+            bodyList.add(emptyLine);
+            bodyList.add(emptyLine);
+            bodyList.add(headerLine5);
+            bodyList.add(headerLine6);
+
+            receipt.setBody(bodyList);
+            receipt.setFooterImage(Utils.generateBarcode("2OFF"));
+
+            Bitmap bitmap =
+                    PrintingUtil.createPrintableImage(receipt);
+            printPosImage(bitmap);
+        }
     }
 
     public int onStartCommand(Intent intent, int flags, int startId) {

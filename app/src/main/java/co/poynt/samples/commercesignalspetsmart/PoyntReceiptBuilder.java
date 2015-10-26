@@ -146,7 +146,7 @@ public class PoyntReceiptBuilder {
     }
     public static final boolean notEmpty(final String s)
     {
-        return !isEmpty(s);
+        return !(s.isEmpty());
     }
     protected void addOrderDetails(Order order, PrintedReceipt receipt) {
         if (receipt.getBody() == null) {
@@ -213,7 +213,7 @@ public class PoyntReceiptBuilder {
         try {
             currency = Currency.getInstance(order.getAmounts().getCurrency());
         } catch (IllegalArgumentException e) {
-            Ln.e(e, "Invalid currencyCode (%s)", order.getAmounts().getCurrency());
+//            Ln.e(e, "Invalid currencyCode (%s)", order.getAmounts().getCurrency());
             if (currency == null) {
                 // default to en-us
                 currency = Currency.getInstance(Locale.US);
@@ -247,7 +247,7 @@ public class PoyntReceiptBuilder {
         try {
             currency = Currency.getInstance(txn.getAmounts().getCurrency());
         } catch (IllegalArgumentException e) {
-            Ln.e(e, "Invalid currencyCode (%s)", txn.getAmounts().getCurrency());
+//            Ln.e(e, "Invalid currencyCode (%s)", txn.getAmounts().getCurrency());
             if (currency == null) {
                 // default to en-us
                 currency = Currency.getInstance(Locale.US);
@@ -325,8 +325,8 @@ public class PoyntReceiptBuilder {
 
         addMerchantInfo(content);
         if (order != null) {
-            content.add(makeLine("Order ID: " + PoyntUtil.convertToShortId(order.getId().toString()), ""));
-            if (Strings.notEmpty(order.getOrderNumber())) {
+            content.add(makeLine("Order ID: " + convertToShortId(order.getId().toString()), ""));
+            if (notEmpty(order.getOrderNumber())) {
                 content.add(makeLine("Order Number: " + order.getOrderNumber(), ""));
             }
             addLine(content);
@@ -475,7 +475,7 @@ public class PoyntReceiptBuilder {
     }
 
     protected boolean addFundingSourceDetails(Transaction txn, List<PrintedReceiptLine> content) {
-        content.add(makeLine("Transaction ID: ", PoyntUtil.convertToShortId(txn.getId().toString())));
+        content.add(makeLine("Transaction ID: ", convertToShortId(txn.getId().toString())));
         content.add(makeLine("Type: ",
                 (FundingSourceType.CREDIT_DEBIT.equals(txn.getFundingSource().getType()) ?
                         "CARD" : txn.getFundingSource().getType().toString())));
@@ -632,7 +632,6 @@ public class PoyntReceiptBuilder {
         }
     }
 
-    @Override
     public PrintedReceipt build(boolean isPreview, Transaction transaction) {
         PrintedReceipt receipt = new PrintedReceipt();
 
@@ -647,7 +646,6 @@ public class PoyntReceiptBuilder {
         return receipt;
     }
 
-    @Override
     public PrintedReceipt build(boolean isPreview, Order order) {
         PrintedReceipt receipt = new PrintedReceipt();
 
@@ -662,7 +660,6 @@ public class PoyntReceiptBuilder {
         return receipt;
     }
 
-    @Override
     public PrintedReceipt build(boolean isPreview, Order order, Transaction transaction, long tipAmount, boolean signatureCollected) {
         if (order == null && transaction == null) {
             return null;
