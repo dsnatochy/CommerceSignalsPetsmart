@@ -8,7 +8,10 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.res.Resources;
 import android.database.ContentObserver;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -40,6 +43,12 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
+
+import com.starmicronics.starioextension.commandbuilder.Bitmap.SCBBitmapConverter;
+import com.starmicronics.starioextension.commandbuilder.ISCBBuilder;
+import com.starmicronics.starioextension.commandbuilder.SCBFactory;
+import com.starmicronics.starioextension.starioextmanager.StarIoExtManager;
+import com.starmicronics.starioextension.starioextmanager.StarIoExtManagerListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -73,9 +82,11 @@ public class OrderService extends Service {
     private Handler handler;
     private Business mBusiness;
 
-    /*** setting up business service ***/
+    /***
+     * setting up business service
+     ***/
     private IPoyntBusinessService mBusinessService;
-    private ServiceConnection mBusinessConnection = new ServiceConnection(){
+    private ServiceConnection mBusinessConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
             Log.d(TAG, "IPoyntBusinessService is now connected");
@@ -97,10 +108,12 @@ public class OrderService extends Service {
         }
     };
 
-    /*** setting up order service ***/
+    /***
+     * setting up order service
+     ***/
     private IPoyntOrderService mOrderService;
 
-    private IPoyntBusinessReadListener mBusinessReadListener = new IPoyntBusinessReadListener.Stub(){
+    private IPoyntBusinessReadListener mBusinessReadListener = new IPoyntBusinessReadListener.Stub() {
 
         @Override
         public void onResponse(Business business, PoyntError poyntError) throws RemoteException {
@@ -126,13 +139,13 @@ public class OrderService extends Service {
         public void orderResponse(Order order, String s, PoyntError poyntError) throws RemoteException {
 //            Log.d(TAG, "Order Info: " + order.toString());
 
-            if (mBusiness != null){
+            if (mBusiness != null) {
                 String bizName = mBusiness.getDoingBusinessAs();
                 Address address = mBusiness.getAddress();
                 String addr1 = address.getLine1();
-                String city =  address.getCity();
+                String city = address.getCity();
                 String state = address.getTerritory();
-                String zip  =  address.getPostalCode();
+                String zip = address.getPostalCode();
                 String phone = "(" + mBusiness.getPhone().getAreaCode() + ")" + mBusiness.getPhone().getLocalPhoneNumber();
 
                 Log.d(TAG, bizName);
@@ -154,7 +167,7 @@ public class OrderService extends Service {
             Log.d(TAG, "Order Number: #" + orderNumber);
             Log.d(TAG, "-----------------------");
 
-            for (OrderItem orderItem : items){
+            for (OrderItem orderItem : items) {
                 String itemName = orderItem.getName();
                 float quantity = orderItem.getQuantity();
 
@@ -162,7 +175,7 @@ public class OrderService extends Service {
                 bd = bd.divide(new BigDecimal(100), 2, RoundingMode.HALF_UP);
                 double unitPrice = bd.doubleValue();
                 String quantityString = "";
-                if ( quantity > 1.0f){
+                if (quantity > 1.0f) {
                     quantityString = "" + quantity + "@";
                 }
                 Log.d(TAG, itemName + "      " + quantityString + " " + unitPrice);
@@ -177,13 +190,19 @@ public class OrderService extends Service {
             Log.d(TAG, "----------------------");
             Log.d(TAG, "Grand Total        " + total);
 
-
+            Bitmap receiptImage = createOrderImage(order);
+//            printPosImage(Bitmap image);
 
         }
     };
 
+    private Bitmap createOrderImage(Order order){
 
-    /**** receipt printing service setup ******/
+    }
+
+    /****
+     * receipt printing service setup
+     ******/
     private IPoyntReceiptPrintingService mReceiptPrintingService;
     private ServiceConnection mReceiptPrintingConnection = new ServiceConnection() {
         // Called when the connection with the service is established
@@ -198,7 +217,7 @@ public class OrderService extends Service {
             mReceiptPrintingService = null;
         }
     };
-    private IPoyntReceiptPrintingServiceListener ipoyntReceiptPrintingServiceListener = new IPoyntReceiptPrintingServiceListener.Stub(){
+    private IPoyntReceiptPrintingServiceListener ipoyntReceiptPrintingServiceListener = new IPoyntReceiptPrintingServiceListener.Stub() {
         @Override
         public void printQueued() throws RemoteException {
             Log.d(TAG, "Receipt queued");
@@ -226,28 +245,30 @@ public class OrderService extends Service {
 //        }
 //    };
 
-    private class PoyntPrintingTask extends AsyncTask<Void,Void,Void> {
+    private class PoyntPrintingTask extends AsyncTask<Void, Void, Void> {
         //private IPoyntReceiptPrintingService printingService;
         String printJobId;
         PrintedReceipt printedReceipt;
+
         @Override
         protected Void doInBackground(Void... voids) {
 
             // need to wait to make sure printing service has connected
-            while (mReceiptPrintingService == null){
+            while (mReceiptPrintingService == null) {
                 try {
                     Thread.currentThread().sleep(1000);
-                }catch(InterruptedException e){ /*do nothing */}
+                } catch (InterruptedException e) { /*do nothing */}
             }
-
             try {
-                mReceiptPrintingService.printReceipt(printJobId,printedReceipt, ipoyntReceiptPrintingServiceListener);
-            } catch (RemoteException e) { e.printStackTrace(); }
+                mReceiptPrintingService.printReceipt(printJobId, printedReceipt, ipoyntReceiptPrintingServiceListener);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
 
             return null;
         }
 
-        public PoyntPrintingTask (IPoyntReceiptPrintingService service, PrintedReceipt receipt){
+        public PoyntPrintingTask(IPoyntReceiptPrintingService service, PrintedReceipt receipt) {
             //this.printingService = service;
             printJobId = UUID.randomUUID().toString();
             this.printedReceipt = receipt;
@@ -255,12 +276,13 @@ public class OrderService extends Service {
         }
     }
 
-    private class mPOPPrintingTask extends AsyncTask<Void, Void, Void>{
+    private class mPOPPrintingTask extends AsyncTask<Void, Void, Void> {
         private String orderId;
+
         @Override
         protected Void doInBackground(Void... voids) {
 
-            while (mOrderService == null){
+            while (mOrderService == null) {
                 try {
                     Thread.currentThread().sleep(1000l);
                 } catch (InterruptedException e) {
@@ -269,19 +291,54 @@ public class OrderService extends Service {
             }
             try {
                 mOrderService.getOrder(orderId, UUID.randomUUID().toString(), poyntOrderServiceListener);
+
+                Bitmap bitmap = Utils.generateBarcode("2OFF");
+
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
+
+
             return null;
         }
 
-        public mPOPPrintingTask( String orderId ){
+
+
+        public mPOPPrintingTask(String orderId) {
             this.orderId = orderId;
         }
 
     }
 
-    private PrintedReceipt getStaticReceipt(){
+    private void printPosImage(Bitmap image) {
+
+        byte[] data = getPOSImage(200, image,SCBBitmapConverter.Rotation.Normal);
+        Comunication.Result result;
+
+        result = Comunication.sendCommands(data,
+                OrderService.this.printerBtMac,
+                "BT:", 10000, OrderService.this);     // 10000mS!!!
+
+    }
+
+    final byte[] getPOSImage(int width, Bitmap bitmap,SCBBitmapConverter.Rotation rotation) {
+        CommandDataList commands = new CommandDataList();
+
+        ISCBBuilder builder = SCBFactory.createBuilder(SCBFactory.Emulation.Star);
+
+        builder.appendBitmap(bitmap, false, width, rotation);
+
+        List<byte[]> listBuf = builder.getBuffer();
+
+        for (byte[] buf : listBuf) {
+            commands.add(buf);
+        }
+
+        commands.add(0x1b, 0x64, 0x03);                 // Cut Paper
+
+        return commands.getByteArray();
+    }
+    private PrintedReceipt getStaticReceipt() {
         PrintedReceipt printedReceipt = new PrintedReceipt();
         List<PrintedReceiptLine> header = new ArrayList<PrintedReceiptLine>();
         PrintedReceiptLine headerLine1 = new PrintedReceiptLine();
@@ -336,16 +393,16 @@ public class OrderService extends Service {
 
         return printedReceipt;
     }
+
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         startForeground(COMMERCE_SIGNALS_NOTIFICATION_ID, getNotification());
 
 
-        new PoyntPrintingTask(mReceiptPrintingService, getStaticReceipt()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, null);
+        //new PoyntPrintingTask(mReceiptPrintingService, getStaticReceipt()).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, null);
 
         String orderId = intent.getStringExtra(Intents.INTENT_EXTRAS_ORDER_ID);
-        //new mPOPPrintingTask(orderId).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, null);
-
+        new mPOPPrintingTask(orderId).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, null);
 
 
         return START_STICKY;
@@ -353,6 +410,45 @@ public class OrderService extends Service {
 //        // 0=OK?
 //        return 0;
     }
+
+    //    STAR mPOP-H0427 |
+    private final String printerBtMac = "BT:00:12:F3:2B:5F:41";
+    private StarIoExtManager mStarIoExtManager = null;
+    private StarIoExtManagerListener mStarIoExtManagerListener = new StarIoExtManagerListener() {
+        public void didPrinterImpossible() {
+            Log.d(TAG, " Printer you are Impossible ;) ");
+        }
+
+        public void didPrinterOnline() {
+            Log.d(TAG, " didPrinterOnline ;) ");
+        }
+
+        public void didPrinterOffline() {
+            Log.d(TAG, " didPrinterOffline ;) ");
+        }
+
+        public void didPrinterPaperReady() {
+            Log.d(TAG, " didPrinterPaperReady ;) ");
+        }
+
+        public void didPrinterPaperNearEmpty() {
+            Log.d(TAG, " didPrinterNealyHungry ;) ");
+        }
+
+        public void didPrinterPaperEmpty() {
+            Log.d(TAG, " didPrinterHungry ;) ");
+        }
+
+        public void didPrinterCoverOpen() {
+            Log.d(TAG, " didPrinterExposed ;) ");
+        }
+
+        public void didPrinterCoverClose() {
+            Log.d(TAG, " didPrinterCoverUP ;) ");
+        }
+
+
+    };
 
     @Override
     public void onCreate() {
@@ -363,6 +459,16 @@ public class OrderService extends Service {
         resolver.registerContentObserver(OrdersColumns.CONTENT_URI, true, observer);
         Log.d(TAG, "from onCreate");
 
+
+        PrinterSetting setting = new PrinterSetting(this);
+        mStarIoExtManager = new StarIoExtManager(StarIoExtManager.Type.Standard,
+                printerBtMac, "BT:",
+                10000, this); // 10000mS!!!
+        mStarIoExtManager.setListener(mStarIoExtManagerListener);
+
+        new mPOPPrintingTask("blah").executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, null);
+
+
         bindService(new Intent(IPoyntReceiptPrintingService.class.getName()),
                 mReceiptPrintingConnection, Context.BIND_AUTO_CREATE);
         bindService(new Intent(IPoyntOrderService.class.getName()),
@@ -370,6 +476,7 @@ public class OrderService extends Service {
         bindService(new Intent(IPoyntBusinessService.class.getName()),
                 mBusinessConnection, Context.BIND_AUTO_CREATE);
     }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -409,7 +516,6 @@ public class OrderService extends Service {
 
         return notification;
     }
-
 
 
     // NOT USED

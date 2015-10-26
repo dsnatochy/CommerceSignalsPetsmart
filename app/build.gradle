@@ -38,4 +38,8 @@ dependencies {
 
     // for bar code
     compile 'com.google.zxing:core:3.1.0'
+
+    //mpop libs
+    compile files('libs/StarIOPort3.1.jar')
+    compile files('libs/StarIO_Extension.jar')
 }

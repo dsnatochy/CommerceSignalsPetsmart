@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="co.poynt.samples.commercesignalspetsmart" >
 
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+
     <uses-permission android:name="android.permission.USE_CREDENTIALS" />
 
     <!-- Poynt Service Permissions -->

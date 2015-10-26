@@ -91,17 +91,19 @@
     </content>
     <orderEntry type="jdk" jdkName="Android API 21 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" exported="" name="json-smart-1.2" level="project" />
+    <orderEntry type="library" exported="" name="android-api-model-1.2.32" level="project" />
+    <orderEntry type="library" exported="" name="jackson-core-2.1.4" level="project" />
+    <orderEntry type="library" exported="" name="StarIOPort3.1" level="project" />
+    <orderEntry type="library" exported="" name="support-v4-21.0.3" level="project" />
+    <orderEntry type="library" exported="" name="jcip-annotations-1.0" level="project" />
+    <orderEntry type="library" exported="" name="core-3.1.0" level="project" />
+    <orderEntry type="library" exported="" name="nimbus-jose-jwt-2.26" level="project" />
+    <orderEntry type="library" exported="" name="jackson-databind-2.1.4" level="project" />
     <orderEntry type="library" exported="" name="poynt-sdk-1.2.8-SNAPSHOT" level="project" />
     <orderEntry type="library" exported="" name="appcompat-v7-21.0.3" level="project" />
     <orderEntry type="library" exported="" name="support-annotations-21.0.3" level="project" />
-    <orderEntry type="library" exported="" name="json-smart-1.2" level="project" />
-    <orderEntry type="library" exported="" name="android-api-model-1.2.32" level="project" />
-    <orderEntry type="library" exported="" name="support-v4-21.0.3" level="project" />
-    <orderEntry type="library" exported="" name="jackson-core-2.1.4" level="project" />
-    <orderEntry type="library" exported="" name="jcip-annotations-1.0" level="project" />
-    <orderEntry type="library" exported="" name="core-3.1.0" level="project" />
-    <orderEntry type="library" exported="" name="jackson-databind-2.1.4" level="project" />
-    <orderEntry type="library" exported="" name="nimbus-jose-jwt-2.26" level="project" />
+    <orderEntry type="library" exported="" name="StarIO_Extension" level="project" />
     <orderEntry type="library" exported="" name="jackson-annotations-2.1.4" level="project" />
   </component>
 </module>
